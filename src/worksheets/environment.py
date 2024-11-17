@@ -70,7 +70,9 @@ class GenieREPR(type):
     def __new__(cls, name, bases, dct):
         new_class = super().__new__(cls, name, bases, dct)
         # Store the ordered attributes, these are used for asking questions in the order they are defined
-        new_class._ordered_attributes = [k for k in dct if not k.startswith("__")]
+        new_class._ordered_attributes = [
+            k for k in dct if not k.startswith("__")
+        ]
         return new_class
 
     def __repr__(cls):
@@ -111,7 +113,6 @@ def validation_check(name, value, validation):
             "criteria": validation,
             "name": name,
         },
-        model_name="gpt-4o-mini",
     )
 
     bs = BeautifulSoup(response, "html.parser")
@@ -124,6 +125,7 @@ def validation_check(name, value, validation):
 
 
 class GenieField:
+
     def __init__(
         self,
         # The type of the slot, e.g., str, int, etc.
@@ -252,7 +254,8 @@ class GenieField:
                 slottype += self.slottype.__args__[0].__name__
             slottype += "]"
         # Special case for enums
-        elif inspect.isclass(self.slottype) and issubclass(self.slottype, Enum):
+        elif inspect.isclass(self.slottype) and issubclass(
+                self.slottype, Enum):
             options = ", ".join([repr(e.name) for e in self.slottype])
             slottype = "Enum[" + options + "]"
         else:
@@ -338,8 +341,7 @@ class GenieField:
             if self.validation:
                 # Use LLM to check if the value is valid based on the validation rule
                 matches_criteria, reason = validation_check(
-                    self.name, value, self.validation
-                )
+                    self.name, value, self.validation)
                 if not matches_criteria:
                     # If the validation fails, use the original value, log the error and set valid to False
                     if isinstance(value, GenieValue):
@@ -347,9 +349,9 @@ class GenieField:
                     self.parent.bot.context.agent_acts.add(
                         ReportAgentAct(
                             query=f"{self.name}={value}",
-                            message=f"Invalid value for {self.name}: {value} - {reason}",
-                        )
-                    )
+                            message=
+                            f"Invalid value for {self.name}: {value} - {reason}",
+                        ))
                     valid = False
 
             if valid:
@@ -368,6 +370,7 @@ class GenieField:
 
 
 class GenieWorksheet(metaclass=GenieREPR):
+
     def __init__(self, **kwargs):
         self.action_performed = False
         self.result = None
@@ -383,8 +386,7 @@ class GenieWorksheet(metaclass=GenieREPR):
             if isinstance(attr_value, GenieField):
                 params = {
                     field: getattr(attr_value, field)
-                    for field in dir(attr_value)
-                    if not field.startswith("__")
+                    for field in dir(attr_value) if not field.startswith("__")
                 }
                 # if the user has passed in a value for the GenieField, set it
                 # eg. Book(booking_id=125)
@@ -441,7 +443,8 @@ class GenieWorksheet(metaclass=GenieREPR):
                 if isinstance(field.value, GenieWorksheet):
                     if not field.value.is_complete(bot, context):
                         return False
-                if (field.value is None or field.value == "") and not field.optional:
+                if (field.value is None
+                        or field.value == "") and not field.optional:
                     return False
 
                 if field.requires_confirmation and not field.confirmed:
@@ -473,7 +476,8 @@ class GenieWorksheet(metaclass=GenieREPR):
                 if field.value == "":
                     continue
                 if field.confirmed:
-                    parameters.append(f"{field.name} = confirmed({repr(field.value)})")
+                    parameters.append(
+                        f"{field.name} = confirmed({repr(field.value)})")
                 else:
                     parameters.append(f"{field.name} = {repr(field.value)}")
             elif isinstance(field._value, GenieResult):
@@ -488,10 +492,8 @@ class GenieWorksheet(metaclass=GenieREPR):
                             if var_name is None and idx is None:
                                 result_strings.append(val)
                             else:
-                                if (
-                                    parent_var_name is not None
-                                    and parent_var_name != var_name
-                                ):
+                                if (parent_var_name is not None
+                                        and parent_var_name != var_name):
                                     logger.error(
                                         "Cannot handle multiple list variables in the same answer"
                                     )
@@ -518,15 +520,14 @@ class GenieWorksheet(metaclass=GenieREPR):
                 if var_name is None and idx is None:
                     if field.confirmed:
                         parameters.append(
-                            f"{field.name} = confirmed({repr(field.value)})"
-                        )
+                            f"{field.name} = confirmed({repr(field.value)})")
                     else:
-                        parameters.append(f"{field.name} = {repr(field.value)}")
+                        parameters.append(
+                            f"{field.name} = {repr(field.value)}")
                 else:
                     if field.confirmed:
                         parameters.append(
-                            f"{field.name} = confirmed({var_name}[{idx}])"
-                        )
+                            f"{field.name} = confirmed({var_name}[{idx}])")
                     else:
                         parameters.append(f"{field.name} = {var_name}[{idx}]")
             else:
@@ -534,7 +535,8 @@ class GenieWorksheet(metaclass=GenieREPR):
 
                 if isinstance(var_name, str):
                     if field.confirmed:
-                        parameters.append(f"{field.name} = confirmed({repr(var_name)})")
+                        parameters.append(
+                            f"{field.name} = confirmed({repr(var_name)})")
                     else:
                         parameters.append(f"{field.name} = {var_name}")
                 else:
@@ -558,11 +560,9 @@ class GenieWorksheet(metaclass=GenieREPR):
         code = self.backend_api + "(" + ", ".join(parameters) + ")"
         var_name = get_variable_name(self, local_context)
         self.result = GenieResult(
-            execute_query(code, self, bot, local_context), self, var_name
-        )
+            execute_query(code, self, bot, local_context), self, var_name)
         self.bot.context.agent_acts.add(
-            ReportAgentAct(code, self.result, None, var_name + ".result")
-        )
+            ReportAgentAct(code, self.result, None, var_name + ".result"))
         self.action_performed = True
         # local_context.context[
         #     f"{generate_var_name(self.__class__.__name__)}_result"
@@ -631,9 +631,11 @@ class GenieDB(GenieWorksheet):
 
 
 class Answer(GenieWorksheet):
+
     def __init__(self, query, required_params, tables, nl_query):
         self.query = GenieField("str", "query", value=query)
-        self.actions = Action(">suql_runner(self.query.value, self.required_columns)")
+        self.actions = Action(
+            ">suql_runner(self.query.value, self.required_columns)")
         self.result = None
         self.tables = tables
         self.potential_outputs = []
@@ -642,12 +644,12 @@ class Answer(GenieWorksheet):
         self.action_performed = False
 
         for table in self.tables:
-            self.potential_outputs.extend(self.bot.context.context[table].outputs)
+            self.potential_outputs.extend(
+                self.bot.context.context[table].outputs)
 
         self.required_columns = [
-            field.name
-            for table in self.tables
-            for field in get_genie_fields_from_ws(self.bot.context.context[table])
+            field.name for table in self.tables for field in
+            get_genie_fields_from_ws(self.bot.context.context[table])
         ]
 
         # Create required params and add them to ordered attributes
@@ -680,7 +682,8 @@ class Answer(GenieWorksheet):
             results = []
 
         # Get more information about the fields
-        ws, field_name, more_field_info_result = self.more_field_info_query(bot)
+        ws, field_name, more_field_info_result = self.more_field_info_query(
+            bot)
         logger.info(f"More Field Info: {more_field_info_result}")
         logger.info(f"Results: {results}")
 
@@ -699,27 +702,25 @@ class Answer(GenieWorksheet):
 
                 # Report the agent act
                 self.bot.context.agent_acts.add(
-                    ReportAgentAct(
-                        self.query, self.result, var_name, var_name + ".result"
-                    )
-                )
+                    ReportAgentAct(self.query, self.result, var_name,
+                                   var_name + ".result"))
                 for i, _output in enumerate(output):
                     if isinstance(_output, GenieWorksheet):
                         # add the output to the local context
                         local_context.set(
-                            f"{camel_to_snake(_output.__class__.__name__)}", _output
-                        )
+                            f"{camel_to_snake(_output.__class__.__name__)}",
+                            _output)
             elif output_idx == 2:
                 # We don't use this for now but we can use it to ask for more information
                 var_name = get_variable_name(self, local_context)
-                self.result = GenieResult(more_field_info_result, self, var_name)
+                self.result = GenieResult(more_field_info_result, self,
+                                          var_name)
                 self.bot.context.agent_acts.add(
                     ReportAgentAct(
                         f"AskClarificationQuestion({ws.__class__.__name__}, {field_name.name})",
                         self.result,
                         message_var_name=var_name + ".result",
-                    )
-                )
+                    ))
 
         # for i, _output in enumerate(output):
         #     local_context.context[f"__{var_name}_result_{i}"] = _output
@@ -732,7 +733,8 @@ class Answer(GenieWorksheet):
         acts = bot.dlg_history[-1].system_action.actions
         for act in acts:
             if isinstance(act, AskAgentAct):
-                more_field_info = generate_clarification(act.ws, act.field.name)
+                more_field_info = generate_clarification(
+                    act.ws, act.field.name)
                 if more_field_info:
                     return act.ws, act.field, more_field_info
 
@@ -767,14 +769,14 @@ class Answer(GenieWorksheet):
             self._ordered_attributes.remove(param)
         self.param_names = []
         self.required_columns = [
-            field.name
-            for table in tables
-            for field in get_genie_fields_from_ws(self.bot.context.context[table])
+            field.name for table in tables for field in
+            get_genie_fields_from_ws(self.bot.context.context[table])
         ]
         self.tables = tables
         self.potential_outputs = []
         for table in self.tables:
-            self.potential_outputs.extend(self.bot.context.context[table].outputs)
+            self.potential_outputs.extend(
+                self.bot.context.context[table].outputs)
 
         if unfilled_params is not None:
             for db_name, params in unfilled_params.items():
@@ -791,9 +793,12 @@ class Answer(GenieWorksheet):
 
 
 class MoreFieldInfo(GenieWorksheet):
+
     def __init__(self, api_name, parameter_name):
         self.api_name = GenieField("str", "api_name", value=api_name)
-        self.parameter_name = GenieField("str", "parameter_name", value=parameter_name)
+        self.parameter_name = GenieField("str",
+                                         "parameter_name",
+                                         value=parameter_name)
         self.actions = Action(
             ">answer_clarification_question(self.api_name, self.parameter_name)"
         )
@@ -823,7 +828,8 @@ class Action:
         # We append the results to the __return variable. This is done by the rewriter
         transformed_code = rewrite_action_code(
             code,
-            ["say", "propose", "answer_clarification_question"],  # predefined actions
+            ["say", "propose", "answer_clarification_question"
+             ],  # predefined actions
         )
         code_ = f"__return = []\n{transformed_code}"
 
@@ -844,6 +850,7 @@ class Action:
 
 
 class GenieRuntime:
+
     def __init__(
         self,
         # The name of the bot
@@ -885,7 +892,10 @@ class GenieRuntime:
                 apis = api
             else:
                 api_funcs = inspect.getmembers(api, inspect.isfunction)
-                apis = [func for name, func in api_funcs if not name.startswith("_")]
+                apis = [
+                    func for name, func in api_funcs
+                    if not name.startswith("_")
+                ]
         else:
             apis = []
         self.dlg_history = []
@@ -897,17 +907,15 @@ class GenieRuntime:
         Answer.bot = self
 
         # Add the predefined apis and functions
-        apis.extend(
-            [
-                propose,
-                confirm,
-                GenieValue,
-                partial(answer_clarification_question, context=self.context),
-                Answer,
-                MoreFieldInfo,
-                say,
-            ]
-        )
+        apis.extend([
+            propose,
+            confirm,
+            GenieValue,
+            partial(answer_clarification_question, context=self.context),
+            Answer,
+            MoreFieldInfo,
+            say,
+        ])
         for api in apis:
             self.add_api(api)
 
@@ -988,13 +996,15 @@ class GenieRuntime:
     def execute(self, code, local_context=None, sp=False):
         """Execute the given code in the context of the bot."""
         if local_context:
-            local_context.update(
-                {k: v for k, v in self.local_context_init.context.items()}
-            )
+            local_context.update({
+                k: v
+                for k, v in self.local_context_init.context.items()
+            })
         else:
-            local_context = GenieContext(
-                {k: v for k, v in self.local_context_init.context.items()}
-            )
+            local_context = GenieContext({
+                k: v
+                for k, v in self.local_context_init.context.items()
+            })
         self._interpreter.execute(
             code,
             self.context,
@@ -1008,13 +1018,15 @@ class GenieRuntime:
     def eval(self, code: str, local_context: GenieContext | None = None):
         """Evaluate the given code in the context of the bot. Used for checking predicates"""
         if local_context:
-            local_context.update(
-                {k: v for k, v in self.local_context_init.context.items()}
-            )
+            local_context.update({
+                k: v
+                for k, v in self.local_context_init.context.items()
+            })
         else:
-            local_context = GenieContext(
-                {k: v for k, v in self.local_context_init.context.items()}
-            )
+            local_context = GenieContext({
+                k: v
+                for k, v in self.local_context_init.context.items()
+            })
         return self._interpreter.eval(
             code,
             self.context,
@@ -1054,6 +1066,7 @@ class GenieRuntime:
 
 
 class GenieInterpreter:
+
     def execute(self, code, global_context, local_context, sp=False):
         # There are some issues here. since there are no numbers now,
         # when we do courses_to_take = CoursesToTake(courses_0_details=course)
@@ -1067,7 +1080,8 @@ class GenieInterpreter:
 
         if not sp:
             # If the execution is for action then we replace the undefined variables
-            code = replace_undefined_variables(code, local_context, global_context)
+            code = replace_undefined_variables(code, local_context,
+                                               global_context)
         try:
             try:
                 exec(code, global_context.context, local_context.context)
@@ -1087,7 +1101,8 @@ class GenieInterpreter:
     def eval(self, code, global_context, local_context):
         # perform rewrite to update any variables that is not in the local context
         # by using the variable resolver
-        code = replace_undefined_variables(code, local_context, global_context).strip()
+        code = replace_undefined_variables(code, local_context,
+                                           global_context).strip()
         try:
             return eval(code, global_context.context, local_context.context)
         except (NameError, AttributeError) as e:
@@ -1141,6 +1156,7 @@ class GenieContext:
 
 
 class TurnContext:
+
     def __init__(self):
         self.context: list[GenieContext] = []
 
@@ -1159,9 +1175,8 @@ def get_genie_fields_from_ws(obj: GenieWorksheet) -> list[GenieField]:
     return fields
 
 
-def execute_query(
-    code: str, obj: GenieWorksheet, bot: GenieRuntime, local_context: GenieContext
-):
+def execute_query(code: str, obj: GenieWorksheet, bot: GenieRuntime,
+                  local_context: GenieContext):
     # refactoring the developer written code
     code = modify_action_code(code, obj, bot, local_context)
     code_ = f"__return = {code}"
@@ -1188,10 +1203,8 @@ def modify_action_code(code, obj, bot, local_context):
 
     def replace_sign(sign, matches, code):
         for func_name, args in matches:
-            if (
-                func_name not in bot.context.context
-                and func_name not in local_context.context
-            ):
+            if (func_name not in bot.context.context
+                    and func_name not in local_context.context):
                 continue
 
             # Replace the decorator with the direct function call in the code
@@ -1258,7 +1271,9 @@ def parse_single_predicate(predicate: str, obj, bot, context) -> bool:
 
 
 def rewrite_action_code(code, builtin_funcs):
+
     class CallTransformer(ast.NodeTransformer):
+
         def __init__(self, builtin_funcs) -> None:
             super().__init__()
             self.builtins = builtin_funcs
@@ -1269,18 +1284,17 @@ def rewrite_action_code(code, builtin_funcs):
 
             # Wrap the function call in a result.append if it's not a built-in function
             # Note: you'll need to determine if a function is built-in based on your criteria
-            if isinstance(node.func, ast.Name) and node.func.id in self.builtins:
-                append_call = ast.Expr(
-                    value=ast.Call(
-                        func=ast.Attribute(
-                            value=ast.Name(id="__return", ctx=ast.Load()),
-                            attr="append",
-                            ctx=ast.Load(),
-                        ),
-                        args=[node],
-                        keywords=[],
-                    )
-                )
+            if isinstance(node.func,
+                          ast.Name) and node.func.id in self.builtins:
+                append_call = ast.Expr(value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="__return", ctx=ast.Load()),
+                        attr="append",
+                        ctx=ast.Load(),
+                    ),
+                    args=[node],
+                    keywords=[],
+                ))
                 return append_call
             return node
 
@@ -1334,8 +1348,7 @@ def same_worksheet(ws1: GenieWorksheet, ws2: GenieWorksheet):
                 if type(field.value) != type(field2.value):
                     return False
                 if isinstance(field.value, GenieWorksheet) and isinstance(
-                    field2.value, GenieWorksheet
-                ):
+                        field2.value, GenieWorksheet):
                     # Recursively check if the worksheets are the same
                     # if the value of the current field is a worksheet
                     if not same_worksheet(field.value, field2.value):
@@ -1444,12 +1457,12 @@ def find_all_variables_matching_name(field_name: str, context: GenieContext):
     return variables
 
 
-def replace_undefined_variables(
-    code: str, local_context: GenieContext, global_context: GenieContext
-):
+def replace_undefined_variables(code: str, local_context: GenieContext,
+                                global_context: GenieContext):
     """Replace undefined variables in the code with their corresponding values from the context."""
 
     class ReplaceVariables(ast.NodeTransformer):
+
         def visit_Name(self, node):
             if node.id in local_context.context:
                 if isinstance(local_context.context[node.id], GenieField):
@@ -1478,9 +1491,8 @@ def replace_undefined_variables(
                         node,
                     )
             else:
-                replacement_var = variable_resolver(
-                    node.id, global_context, local_context
-                )
+                replacement_var = variable_resolver(node.id, global_context,
+                                                    local_context)
                 if replacement_var:
                     if replacement_var.endswith(".value"):
                         name = replacement_var
@@ -1520,7 +1532,8 @@ def variable_resolver(var_name, global_context, local_context):
         candidates = find_all_variables_matching_name(var_name, local_context)
 
         if len(candidates) == 0:
-            candidates = find_all_variables_matching_name(var_name, global_context)
+            candidates = find_all_variables_matching_name(
+                var_name, global_context)
 
         if len(candidates) == 1:
             return candidates[0]
@@ -1551,7 +1564,8 @@ def get_variable_name(obj: GenieWorksheet, context: GenieContext):
     potential_objs = []
     if isinstance(obj, GenieWorksheet):
         for name, value in context.context.items():
-            if not inspect.isclass(value) and isinstance(value, GenieWorksheet):
+            if not inspect.isclass(value) and isinstance(
+                    value, GenieWorksheet):
                 if value.__class__.__name__ == obj.__class__.__name__:
                     potential_objs.append((name, value))
 
@@ -1559,10 +1573,10 @@ def get_variable_name(obj: GenieWorksheet, context: GenieContext):
         return potential_objs[0][0]
     elif len(potential_objs) > 1:
         for name, value in potential_objs:
-            fields_value = [(f.name, f.value) for f in get_genie_fields_from_ws(value)]
-            obj_fields_value = [
-                (f.name, f.value) for f in get_genie_fields_from_ws(obj)
-            ]
+            fields_value = [(f.name, f.value)
+                            for f in get_genie_fields_from_ws(value)]
+            obj_fields_value = [(f.name, f.value)
+                                for f in get_genie_fields_from_ws(obj)]
 
             if deep_compare_lists(fields_value, obj_fields_value):
                 return name
@@ -1585,7 +1599,9 @@ def generate_clarification(worksheet: GenieWorksheet, field: str):
     for f in get_genie_fields_from_ws(worksheet):
         if f.name == field:
             if inspect.isclass(f.slottype) and issubclass(f.slottype, Enum):
-                options = [x.name for x in list(f.slottype.__members__.values())]
+                options = [
+                    x.name for x in list(f.slottype.__members__.values())
+                ]
                 options = ", ".join(options)
                 option_desc = f.description + f" Options are: {options}"
                 return option_desc
@@ -1594,9 +1610,8 @@ def generate_clarification(worksheet: GenieWorksheet, field: str):
     return ""
 
 
-def answer_clarification_question(
-    worksheet: GenieField, field: GenieField, context: GenieContext
-):
+def answer_clarification_question(worksheet: GenieField, field: GenieField,
+                                  context: GenieContext):
     ws = context.context[worksheet.value]
     return ReportAgentAct(
         f"AskClarification({worksheet.value}, {field.value})",
@@ -1618,6 +1633,7 @@ class AgentAct:
 
 
 class ReportAgentAct(AgentAct):
+
     def __init__(
         self,
         query: GenieField,
@@ -1650,6 +1666,7 @@ class ReportAgentAct(AgentAct):
 
 
 class AskAgentAct(AgentAct):
+
     def __init__(self, ws: GenieWorksheet, field: GenieField, ws_name=None):
         self.ws = ws
         self.field = field
@@ -1660,7 +1677,8 @@ class AskAgentAct(AgentAct):
         if inspect.isclass(self.field.slottype):
             if issubclass(self.field.slottype, Enum):
                 options = [
-                    x.name for x in list(self.field.slottype.__members__.values())
+                    x.name
+                    for x in list(self.field.slottype.__members__.values())
                 ]
                 options = ", ".join(options)
                 description = self.field.description + f" Options are: {options}"
@@ -1676,6 +1694,7 @@ class AskAgentAct(AgentAct):
 
 
 class ProposeAgentAct(AgentAct):
+
     def __init__(self, ws: GenieWorksheet, params: dict, ws_name=None):
         self.ws = ws
         self.params = params
@@ -1688,9 +1707,12 @@ class ProposeAgentAct(AgentAct):
 
 
 class AskForConfirmationAgentAct(AgentAct):
-    def __init__(
-        self, ws: "GenieWorksheet", field: "GenieField", ws_name=None, field_name=None
-    ):
+
+    def __init__(self,
+                 ws: "GenieWorksheet",
+                 field: "GenieField",
+                 ws_name=None,
+                 field_name=None):
         self.ws = ws
         self.field = field
         self.ws_name = ws_name
@@ -1712,6 +1734,7 @@ class AskForConfirmationAgentAct(AgentAct):
 
 
 class AgentActs:
+
     def __init__(self, args):
         self.args = args
         self.actions = []
@@ -1735,42 +1758,33 @@ class AgentActs:
         # Check if the incoming action is a ReportAct, if it is then check if there is already a ReportAct with the same query
         if incoming_action.__class__.__name__ == "ReportAgentAct":
             for action in acts_to_action.get("ReportAgentAct", []):
-                if (
-                    action.query == incoming_action.query
-                    and action.message == incoming_action.message
-                ):
+                if (action.query == incoming_action.query
+                        and action.message == incoming_action.message):
                     return False
             return True
         # Check if the incoming action is a ProposeAct, if it is then check if there is already a ProposeAct with the same query
         # or AskAgentAct or AskForConfirmationAct are present
         elif incoming_action.__class__.__name__ == "ProposeAgentAct":
-            if (
-                "AskAgentAct" in acts_to_action
-                or "AskForConfirmationAgentAct" in acts_to_action
-            ):
+            if ("AskAgentAct" in acts_to_action
+                    or "AskForConfirmationAgentAct" in acts_to_action):
                 return False
             for action in acts_to_action.get("ProposeAgentAct", []):
                 if action.params == incoming_action.params and same_worksheet(
-                    action.ws, incoming_action.ws
-                ):
+                        action.ws, incoming_action.ws):
                     return False
             return True
         # Check if the incoming action is a AskAgentAct, if other AskAgentAct or ProposeAgentAct or AskForConfirmationAgentAct are present
         elif incoming_action.__class__.__name__ == "AskAgentAct":
-            if (
-                "ProposeAgentAct" in acts_to_action
-                or "AskAgentAct" in acts_to_action
-                or "AskForConfirmationAgentAct" in acts_to_action
-            ):
+            if ("ProposeAgentAct" in acts_to_action
+                    or "AskAgentAct" in acts_to_action
+                    or "AskForConfirmationAgentAct" in acts_to_action):
                 return False
             return True
         # Check if the incoming action is a AskForConfirmationAct, if other AskAgentAct or ProposeAgentAct or AskForConfirmationAgentAct are present
         elif incoming_action.__class__.__name__ == "AskForConfirmationAgentAct":
-            if (
-                "ProposeAgentAct" in acts_to_action
-                or "AskAgentAct" in acts_to_action
-                or "AskForConfirmationAgentAct" in acts_to_action
-            ):
+            if ("ProposeAgentAct" in acts_to_action
+                    or "AskAgentAct" in acts_to_action
+                    or "AskForConfirmationAgentAct" in acts_to_action):
                 return False
             return True
 
@@ -1801,11 +1815,9 @@ class AgentActs:
             else:
                 acts_to_action[action.__class__.__name__] = [action]
 
-        if (
-            "ProposeAgentAct" in acts_to_action
-            or "AskAgentAct" in acts_to_action
-            or "AskForConfirmationAgentAct" in acts_to_action
-        ):
+        if ("ProposeAgentAct" in acts_to_action
+                or "AskAgentAct" in acts_to_action
+                or "AskForConfirmationAgentAct" in acts_to_action):
             return False
         return True
 
@@ -1825,7 +1837,8 @@ def sanitize_dev_code(code: str, all_variables: list[str]):
     return new_code
 
 
-def any_open_empty_ws(turn_context: GenieContext, global_context: GenieContext):
+def any_open_empty_ws(turn_context: GenieContext,
+                      global_context: GenieContext):
     """Checks all the worksheets in the context. If there is any worksheet that is available but all the fields are None, then return True
     else return False
     """

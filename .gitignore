@@ -184,3 +184,7 @@ notebooks/
 .files/
 .chainlit/
 experiments/output/
+
+system_triage_assistant.json
+uv.lock
+.python-version
