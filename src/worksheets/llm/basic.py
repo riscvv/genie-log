@@ -93,7 +93,7 @@ async def llm_generate(
     prompt_inputs: Dict[str, Any],
     prompt_dir: Optional[str] = None,
     example_path: Optional[str] = None,
-    model_name: str = "azure/gpt-4o",
+    model_name: str = "gpt-4o",
     stream=False,
     **llm_params,
 ) -> str:
@@ -116,7 +116,7 @@ async def llm_generate(
         llm = ChatOpenAI(
             model=model_name,
             streaming=stream,
-            **llm_params,
+            temperature=0,
         )
 
     system_prompt, prompt = load_prompt(os.path.join(prompt_dir, prompt_path))
