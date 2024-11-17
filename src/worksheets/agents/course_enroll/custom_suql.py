@@ -21,7 +21,7 @@ def suql_runner(query, *args, **kwargs):
             "programs": "program_id",
         },
         "course_assistant",
-        llm_model_name="gpt-3.5-turbo-0125",
+        llm_model_name="gpt-4o-mini",
         embedding_server_address="http://127.0.0.1:8509",
         source_file_mapping={
             "course_assistant_general_info.txt":
@@ -44,7 +44,7 @@ async def suql_prompt_selector(query):
             os.path.dirname(os.path.abspath(__file__)),
             "prompts",
         ),
-        model_name="gpt-3.5-turbo-0125",
+        model_name="gpt-4o-mini",
         temperature=0.0,
     ).lower()
 

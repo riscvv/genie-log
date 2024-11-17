@@ -61,7 +61,7 @@ prompt_dir = os.path.join(current_dir, "prompts")
 # Define Knowledge Base
 suql_knowledge = SUQLKnowledgeBase(
     llm_model_name=
-    "gpt-3.5-turbo-0125",  # model name, use this to for _answer, _summary
+    "gpt-4o-mini",  # model name, use this to for _answer, _summary
     tables_with_primary_keys={
         "log_records": "line_id",
         "log_templates": "event_id"
@@ -82,7 +82,7 @@ suql_knowledge = SUQLKnowledgeBase(
 
 # Define Simple LLM Parser
 suql_parser = SUQLParser(
-    llm_model_name="gpt-3.5-turbo-0125",
+    llm_model_name="gpt-4o-mini",
     prompt_selector=
     None,  # optional function that helps in selecting the right prompt
     knowledge=suql_knowledge,
@@ -91,7 +91,7 @@ suql_parser = SUQLParser(
 # Define the SUQL React Parser
 # slower but better for suql query generation, design decision
 # suql_react_parser = SUQLReActParser(
-#     llm_model_name="gpt-3.5-turbo-0125",  # model name
+#     llm_model_name="gpt-4o-mini",  # model name
 #     example_path=os.path.join(current_dir, "examples.txt"),  # path to examples
 #     instruction_path=os.path.join(current_dir, "instructions.txt"),  # path to domain-specific instructions
 #     table_schema_path=os.path.join(current_dir, "table_schema.txt"),  # path to table schema
@@ -113,7 +113,7 @@ system_triage_bot = Agent(
 How can I help you today? 
 """,
     args=model_config,
-    api=[book_restaurant_yelp],
+    api=[],
     knowledge_base=suql_knowledge,
     knowledge_parser=suql_parser,
     model_config=model_config,

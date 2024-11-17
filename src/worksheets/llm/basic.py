@@ -93,7 +93,7 @@ async def llm_generate(
     prompt_inputs: Dict[str, Any],
     prompt_dir: Optional[str] = None,
     example_path: Optional[str] = None,
-    model_name: str = "gpt-3.5-turbo-0125",
+    model_name: str = "gpt-4o-mini",
     stream=False,
     **llm_params,
 ) -> str:
