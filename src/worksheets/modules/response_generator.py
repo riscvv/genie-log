@@ -9,9 +9,8 @@ from worksheets.llm.basic import llm_generate
 from worksheets.modules import CurrentDialogueTurn
 
 
-async def generate_response(
-    current_dlg_turn: CurrentDialogueTurn, dlg_history: List[CurrentDialogueTurn], bot
-):
+async def generate_response(current_dlg_turn: CurrentDialogueTurn,
+                            dlg_history: List[CurrentDialogueTurn], bot):
     # Gather the schema for the current state
     state_schema = get_context_schema(bot.context, response_generator=True)
 
@@ -19,9 +18,8 @@ async def generate_response(
     if current_dlg_turn.system_action is None:
         agent_acts = []
     else:
-        agent_acts = get_agent_action_schemas(
-            current_dlg_turn.system_action, bot.context
-        )
+        agent_acts = get_agent_action_schemas(current_dlg_turn.system_action,
+                                              bot.context)
 
     # Determine the previous agent utterance
     if len(dlg_history):
