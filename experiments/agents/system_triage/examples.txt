@@ -1,9 +1,9 @@
 --
 Rationale: For queries related to checking the system status for a specific system component.
 User: What is the current system status for the scheduler?
-Target: SELECT summary(content) FROM log_records WHERE CONTAINS(component, 'scheduler') ORDER BY log_date AND log_time DESC LIMIT 1;
+Target: SELECT summary(content) FROM log_records WHERE answer(component, 'Is it related to scheduler?') = 'YES' ORDER BY log_date AND log_time DESC LIMIT 1;
 --
 Rationale: For queries related to retrieving a specific system component history during a specified time slot.
 User: What happened to scheduler between 05/16 and 05/17?
-Target: SELECT summary(content), is_abnormal FROM log_records WHERE CONTAINS(component, 'scheduler') AND log_date BETWEEN 2017-05-16 AND 2017-05-17;
+Target: SELECT summary(content), is_abnormal FROM log_records WHERE answer(component, 'Is it related to scheduler?') = 'YES' AND log_date BETWEEN 2017-05-16 AND 2017-05-17;
 __
