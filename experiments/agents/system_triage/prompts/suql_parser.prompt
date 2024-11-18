@@ -31,7 +31,7 @@ system_triage_general_info : FREE_TEXT;
 
 Today's date is {{date}} and the day is {{day}}.
 
-Do not generate fields beyond the given fields. The `answer` function can be used on FREE_TEXT fields.
+Do not generate fields beyond the given fields. The `answer` function can be used on the only FREE_TEXT field, which is content
 Use `BETWEEN timestamp AND timestamp` to find logs in between timestamps on `log_date` or `log_time` column, don't use other operations on the location field.
 To reference a specific log record, use `line_id` with `log_file`, do not use pid field.
 Only generate query on `log_records` and  `log_templates` tables, do not use any other table
@@ -40,16 +40,16 @@ Here are some examples of the queries you need to generate:
 {# Usage of `summary` function on content #}
 Rationale: For queries related to checking the system status for a specific system component.
 User: What is the current system status for the scheduler?
-Target: SELECT summary(content) FROM log_records WHERE answer(component, 'Is it related to scheduler?') = 'YES' ORDER BY log_date AND log_time DESC LIMIT 1;
+Target: SELECT summary(content) FROM log_records WHERE answer(content, 'Is it related to scheduler?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 1;
 --
 {# Usage of `BETWEEN ... AND ...` on log_date #}
 Rationale: For queries related to retrieving a specific system component history during a specified time slot.
 User: What happened to scheduler between 05/16 and 05/17?
-Target: SELECT summary(content) FROM log_records WHERE answer(component, 'Is it related to scheduler?') = 'YES' AND log_date BETWEEN 2017-05-16 AND 2017-05-17;
+Target: SELECT summary(content) FROM log_records WHERE answer(content, 'Is it related to scheduler?') = 'YES' AND log_date BETWEEN 2017-05-16 AND 2017-05-17;
 --
-{# Usage of `answer` function on content and component #}
+{# Usage of `answer` function on content #}
 User: Some resource managers are down. Can you tell me why?
-Target: SELECT *, answer(content, 'Is it indicating down time?'), summary(content) FROM log_records WHERE answer(component, 'is it related to resource manager?') = 'YES' LIMIT 3;
+Target: SELECT *, answer(content, 'Is it indicating down time?'), summary(content) FROM log_records WHERE answer(content, 'is it related to resource manager?') = 'YES' LIMIT 3;
 --
 <|endofinstruction|>
 <|startofinput|>

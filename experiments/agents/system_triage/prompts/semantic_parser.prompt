@@ -108,53 +108,6 @@ User Target:
 main.user_action = 'System Status'
 SystemStatus()
 ```
---
-Example: When the user is asking a questions, use the following syntax: `answer(query:str)`.
-State:
-```
-main = Main(user_actions = 'System Status')
-system_status = SystemStatus()
-```
-Agent Action:
-```
-[
-    "AskField(SystemStatus, system_component, Name of component in the system)"
-]
-```
-
-Last-turn Conversation:
-Agent: What component in the system are you checking status for?
-User: What are the available components in the system currently?
-
-User Target:
-```
-answer("What are the available components in the system currently?")
-```
---
-Example: Use `answer()` function to query for system status in the database
-State:
-```
-main = Main(user_actions = 'System Status')
-system_status = SystemStatus(system_component='scheduler')
-answer = answer("find the current status of scheduler")
-log_records_result = [LogRecords(line_id="10", log_date="nova-scheduler.log.2017-05-14_21:56:07", log_date="2017-05-14", log_time= "00:00:00.008", is_abnormal= True)]
-answer.result = log_records_result[0]
-```
-Agent Action:
-```
-[
-    "Report(answer, answer.result)"
-]
-```
-
-Last-turn Conversation:
-Agent: What component in the system are you checking status for?
-User: Scheduler
-
-User Target:
-```
-answer("find the current status of scheduler")
-```
 <|endofinstruction|>
 
 <|startofinput|>
