@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import yaml
 from suql.agent import postprocess_suql
+from suql import suql_execute
 
 from worksheets.agent import Agent
 from worksheets.environment import get_genie_fields_from_ws
@@ -18,40 +19,29 @@ with open("model_config.yaml", "r") as f:
 course_is_full = {}
 
 
-def book_restaurant_yelp(
-    restaurant: str,
+def search_database(
+    system_component: str,
     **kwargs,
 ):
-    outcome = {
-        "status": "success",
-    }
-    return outcome
+    suql = "SELECT content FROM log_records WHERE answer(content, 'Is it related to {system_component}?') = 'YES' LIMIT 1;".format(
+        system_component=system_component)
 
+    table_w_ids = {"log_records": "p_key"}
+    database = "postgres"
+    print("\n|" * 10)
+    print(suql, table_w_ids, database)
+    results, columns, _ = suql_execute(suql, table_w_ids, database)
+    query_result_str = ""
+    for result in results:
+        query_result_str += "\n" + ", ".join(
+            [col + ": " + res for (col, res) in zip(columns, result)])
+    data_content = "Here is the data retrieved from database, formatted as `column: content`: " + query_result_str
+    print(data_content)
+    return {
+        "database": "log_records",
+        "data_content": data_content
+    } if results else {}
 
-#
-#
-# def course_detail_to_individual_params(course_detail):
-#     if course_detail.value is None:
-#         return {}
-#     course_detail = course_detail.value
-#     course_detail = {}
-#     for field in get_genie_fields_from_ws(course_detail):
-#         course_detail[field.name] = field.value
-#
-#     return course_detail
-#
-#
-# def courses_to_take_oval(**kwargs):
-#     return {"success": True, "transaction_id": uuid4()}
-#
-#
-# def is_course_full(course_id, **kwargs):
-#     # randomly return True or False
-#     if course_id not in course_is_full:
-#         is_full = random.choice([True, False])
-#         course_is_full[course_id] = is_full
-#
-#     return course_is_full[course_id]
 
 # Define path to the prompts
 
@@ -74,8 +64,8 @@ suql_knowledge = SUQLKnowledgeBase(
         os.path.join(current_dir, "system_triage_general_info.txt"
                      )  # mapping of free-text files with the path
     },
-    db_host="localhost", # database host
-    db_port="5432", # database port
+    db_host="localhost",  # database host
+    db_port="5432",  # database port
     postprocessing_fn=postprocess_suql,  # optional postprocessing function
     result_postprocessing_fn=None,  # optional result postprocessing function
 )
@@ -113,11 +103,11 @@ system_triage_bot = Agent(
 How can I help you today? 
 """,
     args=model_config,
-    api=[],
+    api=[search_database],
     knowledge_base=suql_knowledge,
     knowledge_parser=suql_parser,
     model_config=model_config,
-).load_from_gsheet(gsheet_id="1vrZ4KZuXJbPfYeRvwV8bZUTNzYLtMW7kt3nlxzEtzPc", )
+).load_from_gsheet(gsheet_id="1jhoM1JpXmECqIlCb-iMk_NftkfaxkUtCSsxB7A79_Gc", )
 
 # Run the conversation loop
 asyncio.run(

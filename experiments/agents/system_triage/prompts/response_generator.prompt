@@ -36,7 +36,7 @@ Here are some examples:
 Example: If one of the agent actions is 'Report', then you should report the answer to the user. First tell what you searched using `sql` parameter of `answer` if available and then report the answer.
 State:
 ```
-answer = answer('What is the current status of resource managers?', sql="SELECT summary(content) FROM log_records WHERE answer(component, 'Is it related to resource managers?') = 'YES' ORDER BY log_date AND log_time DESC LIMIT 1;")
+answer = answer('What is the current status of resource managers?', sql="SELECT summary(content) FROM log_records WHERE answer(content, 'Is it related to resource managers?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 1;")
 answer.result = [{'line_id': '10', 'log_file': "nova-scheduler.log.2017-05-14_21:56:07", 'log_date': "2017-05-14", 'log_time': "00:00:00.008", 'content': "Resource Manager is down."}]
 main = Main(user_action="System Status")
 system_status = SystemStatu(system_component='resource manager')
