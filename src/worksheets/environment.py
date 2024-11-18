@@ -1095,7 +1095,7 @@ class GenieInterpreter:
                 exec(code, global_context.context, local_context.context)
                 local_context.delete(e.name)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"Error: {e.__repr__()}")
             logger.error(f"Code: {code}")
 
     def eval(self, code, global_context, local_context):

@@ -63,8 +63,8 @@ suql_knowledge = SUQLKnowledgeBase(
     llm_model_name=
     "gpt-4o-mini",  # model name, use this to for _answer, _summary
     tables_with_primary_keys={
-        "log_records": "line_id",
-        "log_templates": "event_id"
+        "public.log_records": "record_id",
+        "public.log_templates": "event_id"
     },
     database_name="postgres",  # database name
     embedding_server_address=
@@ -74,8 +74,8 @@ suql_knowledge = SUQLKnowledgeBase(
         os.path.join(current_dir, "system_triage_general_info.txt"
                      )  # mapping of free-text files with the path
     },
-    # db_host="localhost", # database host
-    # db_port="5432", # database port
+    db_host="localhost", # database host
+    db_port="5432", # database port
     postprocessing_fn=postprocess_suql,  # optional postprocessing function
     result_postprocessing_fn=None,  # optional result postprocessing function
 )

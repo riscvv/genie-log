@@ -78,13 +78,15 @@ class SUQLKnowledgeBase(BaseModel):
             llm_model_name=self.llm_model_name,
             embedding_server_address=self.embedding_server_address,
             source_file_mapping=self.source_file_mapping,
-            db_username=self.db_username,
-            db_password=self.db_password,
-            db_host=self.db_host,
-            db_port=self.db_port,
+            # db_username=self.db_username,
+            # db_password=self.db_password,
+            # db_host=self.db_host,
+            # db_port=self.db_port,
             api_base=self.api_base,
             api_version=self.api_version,
+            log_filename="suql_log.log"
         )
+
 
         # Convert the results to a list of dictionaries for genie worksheets
         results = [dict(zip(column_names, result)) for result in results]

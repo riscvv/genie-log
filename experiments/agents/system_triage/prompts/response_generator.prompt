@@ -36,65 +36,25 @@ Here are some examples:
 Example: If one of the agent actions is 'Report', then you should report the answer to the user. First tell what you searched using `sql` parameter of `answer` if available and then report the answer.
 State:
 ```
-answer = answer('What is the current status of Scheduler?', sql="SELECT summary(content) as status FROM log_records WHERE CONTAINS(component, 'scheduler') ORDER BY log_date AND log_time DESC LIMIT 1;")
-answer.result = [{'status': 'Current status of Scheduler is healthy.'}]
-main = Main()
+answer = answer('What is the current status of resource managers?', sql="SELECT summary(content) FROM log_records WHERE CONTAINS(component, 'scheduler') ORDER BY log_date AND log_time DESC LIMIT 1;")
+answer.result = [{'line_id': '10', 'log_file': "nova-scheduler.log.2017-05-14_21:56:07", 'log_date': "2017-05-14", 'log_time': "00:00:00.008", 'content': "Resource Manager is down."}]
+main = Main(user_action="System Status")
+system_status = SystemStatu(system_component='resource manager')
 ```
 Parsing:
 ```
-answer = Answer('What is the current status of Scheduler?')
+answer = answer('What is the current status of resource managers?')
 ```
+
 Agent Action:
 [
   "Report(answer, answer.result)",
-  "AskField(main, user_action, None)"
+  "AskField(main, user_actions, Type of actions user want to conduct)"
 ]
-Agent: Hello! I'm the System Triage Assistant. I can help you with :
-- History Retrieval: Provide important timestamps
-- Status Report
-- Asking me any question related to a component of the system.
-How can I help you today?
-User: What is the current status of Scheduler?
-Agent: I checked the current status for Scheduler. It looks healthy. What else can I help you with?
+Agent: What system component are you interested in checking status for?
+User: Resource Manager
+Agent: I checked the current status for Resource Manager. It is currently not healthy based on the log record from 2017-05-14 at 00:00:00.008. Do you want to take another action?
 --
-Example: ALWAYS ask for the field in the worksheet when the action is 'AskField'.
-State:
-```
-main = Main(user_action = 'System Status')
-system_status = SystemStatus()
-
-```
-Parsing:
-```
-system_status.system_component = "NA"
-```
-Agent Action:
-[
-  "AskField(system_status, system_component, None)"
-]
-Agent: Could you please provide the details for the component you are interested?
-User: I don't know the component I'm interested.
-Agent: Sorry, but I can't help you with status of unknown component. Could you please provide the details for the component you are interested?
---
-Example: If the answer.result is empty, then first tell the user what you searched and tell the user that you don't have any information available.
-State:
-```
-answer = answer('What is the status of the scheduler?', sql="SELECT summary(content) as status FROM log_records WHERE CONTAINS(component, 'scheduler') ORDER BY log_date AND log_time DESC LIMIT 1;")
-answer.result = []
-main_0 = Main()
-
-```
-Parsing:
-```
-answer = Answer('What is the status of the scheduler?')
-```
-Agent Action:
-[
-  "Report(answer, answer.result)",
-  "AskField(main_0, user_action, Type of actions user want to conduct)"
-]
-Agent: Unfortunately, there are no records related to the system component of Scheduler. Can I assist you with anything else regarding this component or any other actions you're interested in?
-User: What about the other actions?
 <|endofinstruction|>
 
 
