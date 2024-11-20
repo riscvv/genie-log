@@ -160,10 +160,10 @@ system_triage_bot = Agent(
     "You are a system triage assistant. You can help engineer with history retrieval and status report on the system.",
     prompt_dir=prompt_dir,
     starting_prompt=
-    """Hello! I'm the System Triage Assistant. I can help you with :
-- History Retrieval: Provide important timestamps
-- Status Report 
-- Asking me any question related to a component of the system.
+    """Hello! I'm the System Triage Assistant. I can help you with:
+- Error Triage
+- History Retrieval
+- Status Report
 
 How can I help you today? 
 """,
