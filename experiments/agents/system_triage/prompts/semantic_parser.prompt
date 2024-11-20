@@ -47,13 +47,13 @@ None
 ```
 
 Last-turn Conversation:
-Agent: Hello! I'm the System Triage Assistant. I can help you with :
-- History Retrieval: Provide important timestamps
+Agent: Hello! I'm the System Triage Assistant. I can help you with:
+- Error
+- History Retrieval
 - Status Report
-- Asking me any question related to a component of the system.
 
-How can I help you today?
-User: Hi there! I am Monica, I want to get the current status of the system.
+How can I help you today? 
+User: Hi there! I want to get the current status of the system.
 
 User Target:
 ```
@@ -95,12 +95,12 @@ Agent Action:
 ```
 
 Last-turn Conversation:
-Agent: Hello! I'm the System Triage Assistant. I can help you with :
-- History Retrieval: Provide important timestamps
+Agent: Hello! I'm the System Triage Assistant. I can help you with:
+- Error
+- History Retrieval
 - Status Report
-- Asking me any question related to a component of the system.
 
-How can I help you today?
+How can I help you today? 
 User: I want to do a system status check.
 
 User Target:
@@ -109,26 +109,27 @@ main.user_action = 'System Status'
 SystemStatus()
 ```
 --
-Example: When the user is asking a questions, use the following syntax: `answer(query:str)`.
+Example: Always answer the user's request first, irrespective of the current state. When you ask the user for additional information and the user asks for options, search the database for available options.
 State:
 ```
-main = Main(user_actions = 'System Status')
+main = Main(user_action = 'System Status')
 system_status = SystemStatus()
 ```
 Agent Action:
 ```
 [
-    "AskField(SystemStatus, system_component, Name of component in the system)"
+  "AskField(SystemStatus, system_component, Name of component in the system)"
 ]
 ```
 
 Last-turn Conversation:
-Agent: What component in the system are you checking status for?
-User: What are the available components in the system currently?
+Agent: To provide you with a status report, I need to gather some information. Could you tell me which component of the system you are interested in?
+User: Any options?
 
 User Target:
 ```
-answer("What are the available components in the system currently?")
+answer("Which unique components in the system may I choose from?")
+AskField(SystemStatus, system_component, Name of component in the system)
 ```
 --
 Example: Use `answer()` function to query for system status in the database
@@ -140,6 +141,7 @@ answer = answer("find the current status of scheduler")
 log_records_result = [LogRecords(line_id="10", log_date="nova-scheduler.log.2017-05-14_21:56:07", log_date="2017-05-14", log_time= "00:00:00.008", is_abnormal= True)]
 answer.result = log_records_result[0]
 ```
+
 Agent Action:
 ```
 [

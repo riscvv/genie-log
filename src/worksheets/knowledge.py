@@ -82,11 +82,9 @@ class SUQLKnowledgeBase(BaseModel):
             # db_password=self.db_password,
             # db_host=self.db_host,
             # db_port=self.db_port,
-            api_base=self.api_base,
-            api_version=self.api_version,
-            log_filename="suql_log.log"
-        )
-
+            # api_base=self.api_base,
+            # api_version=self.api_version,
+            log_filename="suql_log.log")
 
         # Convert the results to a list of dictionaries for genie worksheets
         results = [dict(zip(column_names, result)) for result in results]
@@ -94,7 +92,7 @@ class SUQLKnowledgeBase(BaseModel):
         if self.result_postprocessing_fn:
             results = self.result_postprocessing_fn(results, column_names)
 
-        return results[: self.max_rows]
+        return results[:self.max_rows]
 
 
 class BaseSUQLParser(BaseModel):
@@ -116,8 +114,7 @@ class BaseSUQLParser(BaseModel):
 
             if db_results is None:
                 db_result = [
-                    obj.result
-                    for obj in turn.context.context.values()
+                    obj.result for obj in turn.context.context.values()
                     if isinstance(obj, Answer)
                     and obj.query.value == turn.user_target_suql
                 ]
@@ -130,8 +127,7 @@ class BaseSUQLParser(BaseModel):
                     db_results=db_result,
                     user_target=user_target,
                     agent_utterance=agent_utterance,
-                )
-            )
+                ))
 
         return suql_dlg_history
 
@@ -166,8 +162,7 @@ class SUQLParser(BaseSUQLParser):
         """
 
         suql_dlg_history = self.convert_dlg_turn_to_suql_dlg_turn(
-            dlg_history, query, db_results
-        )
+            dlg_history, query, db_results)
 
         # Use the prompt selector if available
         if self.prompt_selector:
@@ -248,8 +243,7 @@ class SUQLReActParser(BaseSUQLParser):
         db_results: List[str] | None = None,
     ):
         suql_dlg_history = self.convert_dlg_turn_to_suql_dlg_turn(
-            dlg_history, query, db_results
-        )
+            dlg_history, query, db_results)
 
         self.conversation_history = suql_dlg_history
 
@@ -297,12 +291,12 @@ class SUQLReActParser(BaseSUQLParser):
                 table_schema=self.table_schema,
             )
 
-            output = await parser.arun(
-                {
-                    "question": user_input,
-                    "conversation_history": self.conversation_history,
-                }
-            )
+            output = await parser.arun({
+                "question":
+                user_input,
+                "conversation_history":
+                self.conversation_history,
+            })
         finally:
             write_prompt_logs_to_file(append=True, include_timestamp=True)
 
