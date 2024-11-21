@@ -117,7 +117,7 @@ How can I help you today?
     knowledge_base=suql_knowledge,
     knowledge_parser=suql_parser,
     model_config=model_config,
-).load_from_gsheet(gsheet_id="1vrZ4KZuXJbPfYeRvwV8bZUTNzYLtMW7kt3nlxzEtzPc", )
+).load_from_gsheet(gsheet_id="1jhoM1JpXmECqIlCb-iMk_NftkfaxkUtCSsxB7A79_Gc", )
 
 # Run the conversation loop
 asyncio.run(
