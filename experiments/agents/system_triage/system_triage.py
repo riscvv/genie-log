@@ -23,10 +23,66 @@ def status_report(
     system_component: str,
     **kwargs,
 ):
+    table_w_ids = {"log_records_small": "record_id"}
+    database = "postgres"
+
+    print("=" * 80)
+
+    # Get all components
+    suql = "SELECT DISTINCT component FROM log_records_small"
+    results, _, _ = suql_execute(suql, table_w_ids, database)
+    components = ", ".join([result[0] for result in results])
+
+    # Get component name user refers to
+    suql = "SELECT answer('Here are the components in the system: {components}', 'Which component does \"{system_component}\" refers to? Answer with a component name or NONE if it does not refer to any component');".format(
+        components=components, system_component=system_component)
+    results, _, _ = suql_execute(suql, table_w_ids, database)
+    component = results[0][0]
+    if component == "NONE" or component not in components:
+        return {
+            "error":
+            "The provided system component {} does not refer to any component in the system."
+            .format(system_component)
+        }
+    print(component)
+    print("-" * 80)
+
+    # Retrieve relevant entries
+    if "use_is_relevant" in kwargs and kwargs["use_is_relevant"]:
+        suql = "SELECT * FROM log_records_small WHERE component='{component}' OR is_relevant(content, 'What is the current status of {component}?') ORDER BY log_date, log_time DESC LIMIT 5;".format(
+            component=component)
+    else:
+        suql = "SELECT * FROM log_records_small WHERE component='{component}' OR answer(content, 'Is it related to {component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 5;".format(
+            component=component)
+
+    print(suql, table_w_ids, database)
+    print("-" * 80)
+    results, columns, _ = suql_execute(suql, table_w_ids, database)
+    query_result_str = ""
+    for result in results:
+        query_result_str += ", ".join([
+            str(col) + ": " + str(res) for (col, res) in zip(columns, result)
+        ]) + "\n"
+    print(query_result_str)
+    query_result_str = query_result_str.replace("\n", ";")
+    print("-" * 80)
+    # Summarize retrieved data
+    suql = "SELECT answer('{}', 'What is the current status of {} given the recent log provided?');".format(
+        query_result_str, component)
+    results, _, _ = suql_execute(suql, table_w_ids, database)
+    print(results)
+    print("=" * 80)
+    return {"status_summary": results[0]} if results else {}
+
+
+def history_retrieval(
+    system_component: str,
+    **kwargs,
+):
     # Retrieve relevant entries
     print("=" * 80)
     if "use_is_relevant" in kwargs and kwargs["use_is_relevant"]:
-        suql = "SELECT content FROM log_records_small WHERE is_relevant(content, 'Is it related to {system_component}?') LIMIT 1;".format(
+        suql = "SELECT * FROM log_records_small WHERE is_relevant('What is the current status of {system_component}?') ORDER BY log_date, log_time DESC LIMIT 5;".format(
             system_component=system_component)
     else:
         suql = "SELECT * FROM log_records_small WHERE answer(content, 'Is it related to {system_component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 5;".format(
@@ -46,7 +102,7 @@ def status_report(
     print(query_result_str)
     print("-" * 80)
     # Summarize retrieved data
-    suql = "SELECT answer('{}', 'What is the current status of the system given the recent log provided?');".format(
+    suql = "SELECT answer('{}', 'What is the current status of the system component given the recent log provided?');".format(
         query_result_str)
     print(suql)
     results, _, _ = suql_execute(suql, table_w_ids, database)
