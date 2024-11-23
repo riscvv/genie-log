@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import yaml
 from suql.agent import postprocess_suql
+from suql import suql_execute
 
 from worksheets.agent import Agent
 from worksheets.environment import get_genie_fields_from_ws
@@ -18,40 +19,41 @@ with open("model_config.yaml", "r") as f:
 course_is_full = {}
 
 
-def book_restaurant_yelp(
-    restaurant: str,
+def status_report(
+    system_component: str,
     **kwargs,
 ):
-    outcome = {
-        "status": "success",
-    }
-    return outcome
+    # Retrieve relevant entries
+    print("=" * 80)
+    if "use_is_relevant" in kwargs and kwargs["use_is_relevant"]:
+        suql = "SELECT content FROM log_records_small WHERE is_relevant(content, 'Is it related to {system_component}?') LIMIT 1;".format(
+            system_component=system_component)
+    else:
+        suql = "SELECT * FROM log_records_small WHERE answer(content, 'Is it related to {system_component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 5;".format(
+            system_component=system_component)
 
+    table_w_ids = {"log_records_small": "record_id"}
+    database = "postgres"
+    print(suql, table_w_ids, database)
+    print("-" * 80)
+    results, columns, _ = suql_execute(suql, table_w_ids, database)
+    query_result_str = ""
+    for result in results:
+        query_result_str += ", ".join([
+            str(col) + ": " + str(res) for (col, res) in zip(columns, result)
+        ]) + "\n"
+    query_result_str = query_result_str.replace("\n", ";")
+    print(query_result_str)
+    print("-" * 80)
+    # Summarize retrieved data
+    suql = "SELECT answer('{}', 'What is the current status of the system given the recent log provided?');".format(
+        query_result_str)
+    print(suql)
+    results, _, _ = suql_execute(suql, table_w_ids, database)
+    print(results)
+    print("=" * 80)
+    return {"status_summary": results[0]} if results else {}
 
-#
-#
-# def course_detail_to_individual_params(course_detail):
-#     if course_detail.value is None:
-#         return {}
-#     course_detail = course_detail.value
-#     course_detail = {}
-#     for field in get_genie_fields_from_ws(course_detail):
-#         course_detail[field.name] = field.value
-#
-#     return course_detail
-#
-#
-# def courses_to_take_oval(**kwargs):
-#     return {"success": True, "transaction_id": uuid4()}
-#
-#
-# def is_course_full(course_id, **kwargs):
-#     # randomly return True or False
-#     if course_id not in course_is_full:
-#         is_full = random.choice([True, False])
-#         course_is_full[course_id] = is_full
-#
-#     return course_is_full[course_id]
 
 # Define path to the prompts
 
@@ -63,8 +65,8 @@ suql_knowledge = SUQLKnowledgeBase(
     llm_model_name=
     "gpt-4o-mini",  # model name, use this to for _answer, _summary
     tables_with_primary_keys={
-        "public.log_records": "record_id",
-        "public.log_templates": "event_id"
+        "public.log_records_small": "record_id",
+        "public.log_templates_small": "event_id"
     },
     database_name="postgres",  # database name
     embedding_server_address=
@@ -74,8 +76,8 @@ suql_knowledge = SUQLKnowledgeBase(
         os.path.join(current_dir, "system_triage_general_info.txt"
                      )  # mapping of free-text files with the path
     },
-    db_host="localhost", # database host
-    db_port="5432", # database port
+    db_host="localhost",  # database host
+    db_port="5432",  # database port
     postprocessing_fn=postprocess_suql,  # optional postprocessing function
     result_postprocessing_fn=None,  # optional result postprocessing function
 )
@@ -113,11 +115,11 @@ system_triage_bot = Agent(
 How can I help you today? 
 """,
     args=model_config,
-    api=[],
+    api=[status_report],
     knowledge_base=suql_knowledge,
     knowledge_parser=suql_parser,
     model_config=model_config,
-).load_from_gsheet(gsheet_id="1vrZ4KZuXJbPfYeRvwV8bZUTNzYLtMW7kt3nlxzEtzPc", )
+).load_from_gsheet(gsheet_id="1jhoM1JpXmECqIlCb-iMk_NftkfaxkUtCSsxB7A79_Gc", )
 
 # Run the conversation loop
 asyncio.run(
