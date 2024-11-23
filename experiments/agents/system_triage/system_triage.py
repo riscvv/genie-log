@@ -16,20 +16,17 @@ with open("model_config.yaml", "r") as f:
     model_config = yaml.safe_load(f)
 
 # Define your APIs
-course_is_full = {}
-
-
 def status_report(
     system_component: str,
     **kwargs,
 ):
-    table_w_ids = {"log_records_small": "record_id"}
+    table_w_ids = {"log_records": "record_id"}
     database = "postgres"
 
     print("=" * 80)
 
     # Get all components
-    suql = "SELECT DISTINCT component FROM log_records_small"
+    suql = "SELECT DISTINCT component FROM log_records"
     results, _, _ = suql_execute(suql, table_w_ids, database)
     components = ", ".join([result[0] for result in results])
 
@@ -49,10 +46,10 @@ def status_report(
 
     # Retrieve relevant entries
     if "use_is_relevant" in kwargs and kwargs["use_is_relevant"]:
-        suql = "SELECT * FROM log_records_small WHERE component='{component}' OR is_relevant(content, 'What is the current status of {component}?') ORDER BY log_date, log_time DESC LIMIT 5;".format(
+        suql = "SELECT * FROM log_records WHERE component='{component}' OR is_relevant(content, 'What is the current status of {component}?') ORDER BY log_date, log_time DESC LIMIT 5;".format(
             component=component)
     else:
-        suql = "SELECT * FROM log_records_small WHERE component='{component}' OR answer(content, 'Is it related to {component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 5;".format(
+        suql = "SELECT * FROM log_records WHERE component='{component}' OR answer(content, 'Is it related to {component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 5;".format(
             component=component)
 
     print(suql, table_w_ids, database)
@@ -82,13 +79,13 @@ def history_retrieval(
     # Retrieve relevant entries
     print("=" * 80)
     if "use_is_relevant" in kwargs and kwargs["use_is_relevant"]:
-        suql = "SELECT * FROM log_records_small WHERE is_relevant('What is the current status of {system_component}?') ORDER BY log_date, log_time DESC LIMIT 5;".format(
+        suql = "SELECT * FROM log_records WHERE is_relevant('What is the current status of {system_component}?') ORDER BY log_date, log_time DESC LIMIT 5;".format(
             system_component=system_component)
     else:
-        suql = "SELECT * FROM log_records_small WHERE answer(content, 'Is it related to {system_component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 5;".format(
+        suql = "SELECT * FROM log_records WHERE answer(content, 'Is it related to {system_component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT 5;".format(
             system_component=system_component)
 
-    table_w_ids = {"log_records_small": "record_id"}
+    table_w_ids = {"log_records": "record_id"}
     database = "postgres"
     print(suql, table_w_ids, database)
     print("-" * 80)
@@ -121,8 +118,8 @@ suql_knowledge = SUQLKnowledgeBase(
     llm_model_name=
     "gpt-4o-mini",  # model name, use this to for _answer, _summary
     tables_with_primary_keys={
-        "public.log_records_small": "record_id",
-        "public.log_templates_small": "event_id"
+        "public.log_records": "record_id",
+        "public.log_templates": "event_id"
     },
     database_name="postgres",  # database name
     embedding_server_address=
@@ -175,7 +172,7 @@ How can I help you today?
     knowledge_base=suql_knowledge,
     knowledge_parser=suql_parser,
     model_config=model_config,
-).load_from_gsheet(gsheet_id="1jhoM1JpXmECqIlCb-iMk_NftkfaxkUtCSsxB7A79_Gc", )
+).load_from_gsheet(gsheet_id="1vrZ4KZuXJbPfYeRvwV8bZUTNzYLtMW7kt3nlxzEtzPc", )
 
 # Run the conversation loop
 asyncio.run(

@@ -93,7 +93,7 @@ async def _nl_to_code(current_dlg_turn, dlg_history, bot: GenieRuntime, **kwargs
         if suql_query is None:
             logger.error(f"SUQL parsing failed for {answer_query}")
             suql_query = ""
-
+        logger.debug(f'suql_query is {suql_query}')
         suql_query = suql_query.replace("\*", "*")
 
         if "SELECT" in suql_query:

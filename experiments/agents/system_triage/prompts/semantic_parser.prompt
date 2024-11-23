@@ -63,8 +63,8 @@ Main(user_action="System Status")
 Example: To update any field of the APIs, you can use the following syntax: `api_name.field_name = value`
 State:
 ```
-main = Main(user_action="System Status")
 system_status = SystemStatus()
+main = Main(user_action="System Status", system_status=system_status)
 ```
 Agent Action:
 ```
@@ -106,13 +106,12 @@ User: I want to do a system status check.
 User Target:
 ```
 main.user_action = 'System Status'
-SystemStatus()
 ```
 --
 Example: When the user is asking a questions, use the following syntax: `answer(query:str)`.
 State:
 ```
-main = Main(user_actions = 'System Status')
+main = Main(user_actions = 'System Status', system_status=system_status)
 system_status = SystemStatus()
 ```
 Agent Action:
@@ -134,7 +133,7 @@ answer("What are the available components in the system currently?")
 Example: Use `answer()` function to query for system status in the database
 State:
 ```
-main = Main(user_actions = 'System Status')
+main = Main(user_actions = 'System Status', system_status=system_status)
 system_status = SystemStatus(system_component='scheduler')
 answer = answer("find the current status of scheduler")
 log_records_result = [LogRecords(line_id="10", log_date="nova-scheduler.log.2017-05-14_21:56:07", log_date="2017-05-14", log_time= "00:00:00.008", is_abnormal= True)]
