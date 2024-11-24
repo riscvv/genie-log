@@ -1,0 +1,25 @@
+# System Triage Guidelines
+System triage refers to the process of quickly assessing and prioritizing issues within
+a system—whether it's a computer system, network, application, or infrastructure—so that the most critical problems are addressed first.
+This is often done in the context of troubleshooting, incident response, or IT support.
+
+The goal of system triage is to identify and mitigate problems as efficiently as possible, preventing further damage,
+and minimizing downtime or service disruption. It can be applied in a variety of environments,
+from servers to cloud systems to end-user devices.
+
+## Gather Information
+Before jumping into fixing issues, collect as much information as possible about the system and the problem. This involves:
+
+System Logs: Review application, security, and system logs for errors or unusual activity.
+User Reports: Collect information from users or stakeholders regarding symptoms, timelines, and the scope of the issue.
+Monitoring Data: Look at monitoring dashboards or metrics to identify any spikes, drops, or trends in performance, CPU, memory usage, disk space, etc.
+Recent Changes: Identify recent system or software changes (deployments, configuration changes, patches, etc.) that could have introduced the problem.
+
+## Identify Potential Root Causes
+Try to narrow down the possible causes of the problem:
+
+Hardware failure: Disk, memory, CPU, or other physical component failures.
+Software bugs: Issues in application code, databases, or operating system software.
+Configuration issues: Misconfigurations in network, security, or system settings.
+Network or connectivity issues: Bandwidth, latency, or routing problems.
+External factors: Power outages, third-party service failures, or security threats like DDoS attacks.

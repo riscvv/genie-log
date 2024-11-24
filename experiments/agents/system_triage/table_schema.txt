@@ -1,0 +1,27 @@
+-- Define All Tables and their schema
+DROP TABLE IF EXISTS log_templates CASCADE;
+CREATE TABLE log_templates (
+    event_id CHAR(8) UNIQUE,
+    event_template TEXT,
+    occurrences INTEGER,
+    PRIMARY KEY (event_id)
+);
+
+DROP TABLE IF EXISTS log_records CASCADE;
+CREATE TABLE log_records (
+    line_id INTEGER,
+    log_file VARCHAR(255) NOT NULL,
+    log_date DATE,
+    log_time TIME(3) NOT NULL,
+    pid INTEGER,
+    level VARCHAR(10),
+    component VARCHAR(100),
+    addr VARCHAR(255),
+    content TEXT,
+    event_id VARCHAR(8),
+    event_template TEXT,
+    parameter_list TEXT,
+    is_abnormal BOOLEAN,=
+    PRIMARY KEY (record_id),
+    FOREIGN KEY (event_id) REFERENCES log_templates(event_id)
+);

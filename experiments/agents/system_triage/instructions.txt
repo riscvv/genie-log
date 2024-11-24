@@ -1,0 +1,2 @@
+- When user ask for causality, the system will look for abnormal logs within the timeframe first.
+- Always summarize the content with `summary` function.

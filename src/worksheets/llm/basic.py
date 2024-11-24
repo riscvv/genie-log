@@ -16,7 +16,8 @@ from loguru import logger
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
 date_today = datetime.date.today().strftime("%Y-%m-%d")
-logfile = os.path.join(current_dir, "..", "..", "logs", f"worksheets-{date_today}.log")
+logfile = os.path.join(current_dir, "..", "..", "logs",
+                       f"worksheets-{date_today}.log")
 
 logger.add(logfile)
 
@@ -40,8 +41,7 @@ def load_prompt(prompt_file: str) -> Tuple[str, str]:
     with open(prompt_file, "r") as f:
         text = f.read()
         system_prompt = (
-            text.split(INSTRUCTION_START)[1].split(INSTRUCTION_END)[0].strip()
-        )
+            text.split(INSTRUCTION_START)[1].split(INSTRUCTION_END)[0].strip())
         prompt = text.split(PROMPT_START)[1].split(PROMPT_END)[0].strip()
 
     return system_prompt, prompt
@@ -93,7 +93,7 @@ async def llm_generate(
     prompt_inputs: Dict[str, Any],
     prompt_dir: Optional[str] = None,
     example_path: Optional[str] = None,
-    model_name: str = "azure/gpt-4o",
+    model_name: str = "gpt-4o-mini",
     stream=False,
     **llm_params,
 ) -> str:
@@ -116,19 +116,19 @@ async def llm_generate(
         llm = ChatOpenAI(
             model=model_name,
             streaming=stream,
-            **llm_params,
+            temperature=0,
         )
 
     system_prompt, prompt = load_prompt(os.path.join(prompt_dir, prompt_path))
     if example_path:
-        examples = get_examples(os.path.join(prompt_dir, example_path, prompt_path))
+        examples = get_examples(
+            os.path.join(prompt_dir, example_path, prompt_path))
     else:
         examples = []
 
     messages = [
-        SystemMessagePromptTemplate.from_template(
-            system_prompt, template_format="jinja2"
-        )
+        SystemMessagePromptTemplate.from_template(system_prompt,
+                                                  template_format="jinja2")
     ]
 
     for example in examples:
@@ -136,8 +136,8 @@ async def llm_generate(
         messages.append(SystemMessage(content=example[1]))
 
     messages.append(
-        HumanMessagePromptTemplate.from_template(prompt, template_format="jinja2")
-    )
+        HumanMessagePromptTemplate.from_template(prompt,
+                                                 template_format="jinja2"))
 
     prompt_template = ChatPromptTemplate.from_messages(messages)
 
