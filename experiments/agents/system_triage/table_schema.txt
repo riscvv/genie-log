@@ -1,38 +1,27 @@
 -- Define All Tables and their schema
-CREATE TABLE IF NOT EXISTS log_templates (
-    EventId VARCHAR(8) PRIMARY KEY,
-    EventTemplate TEXT NOT NULL,
-    Occurrences INTEGER NOT NULL
+DROP TABLE IF EXISTS log_templates CASCADE;
+CREATE TABLE log_templates (
+    event_id CHAR(8) UNIQUE,
+    event_template TEXT,
+    occurrences INTEGER,
+    PRIMARY KEY (event_id)
 );
 
-CREATE TABLE IF NOT EXISTS log_normal (
-    LineId INTEGER PRIMARY KEY,
-    Logrecord VARCHAR(255) NOT NULL,
-    Date DATE NOT NULL,
-    Time TIME(6) NOT NULL,
-    Pid INTEGER NOT NULL,
-    Level VARCHAR(10) NOT NULL,
-    Component VARCHAR(255) NOT NULL,
-    ADDR TEXT NOT NULL,
-    Content TEXT NOT NULL,
-    EventId VARCHAR(8) NOT NULL,
-    EventTemplate TEXT NOT NULL,
-    ParameterList TEXT[] NOT NULL,
-    FOREIGN KEY (EventId) REFERENCES log_templates(EventId)
-);
-
-CREATE TABLE IF NOT EXISTS log_abnormal (
-    LineId INTEGER PRIMARY KEY,
-    Logrecord VARCHAR(255) NOT NULL,
-    Date DATE NOT NULL,
-    Time TIME(6) NOT NULL,
-    Pid INTEGER NOT NULL,
-    Level VARCHAR(10) NOT NULL,
-    Component VARCHAR(255) NOT NULL,
-    ADDR TEXT NOT NULL,
-    Content TEXT NOT NULL,
-    EventId VARCHAR(8) NOT NULL,
-    EventTemplate TEXT NOT NULL,
-    ParameterList TEXT[] NOT NULL,
-    FOREIGN KEY (EventId) REFERENCES log_templates(EventId)
+DROP TABLE IF EXISTS log_records CASCADE;
+CREATE TABLE log_records (
+    line_id INTEGER,
+    log_file VARCHAR(255) NOT NULL,
+    log_date DATE,
+    log_time TIME(3) NOT NULL,
+    pid INTEGER,
+    level VARCHAR(10),
+    component VARCHAR(100),
+    addr VARCHAR(255),
+    content TEXT,
+    event_id VARCHAR(8),
+    event_template TEXT,
+    parameter_list TEXT,
+    is_abnormal BOOLEAN,=
+    PRIMARY KEY (record_id),
+    FOREIGN KEY (event_id) REFERENCES log_templates(event_id)
 );
