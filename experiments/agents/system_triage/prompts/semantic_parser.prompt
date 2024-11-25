@@ -60,7 +60,7 @@ User Target:
 Main(user_action="System Status")
 ```
 --
-Example: To update any field of the APIs, you can use the following syntax: `api_name.field_name = value`
+Example: To update any field of the APIs, you can use the following syntax: `api_name.field_name = value`. Only set the values the user provided, but not others.
 State:
 ```
 system_status = SystemStatus()
