@@ -15,6 +15,7 @@ from worksheets.knowledge import SUQLKnowledgeBase, SUQLReActParser, SUQLParser
 with open("model_config.yaml", "r") as f:
     model_config = yaml.safe_load(f)
 
+
 # Define your APIs
 def status_report(
     system_component: str,
