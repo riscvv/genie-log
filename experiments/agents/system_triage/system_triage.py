@@ -172,17 +172,23 @@ def do_history_retrieval(
     return {"history_summary": results[0]} if results else {}
 
 
-def do_triage_error(system_component: str, **kwargs):
+def do_triage_error(system_component: str,
+                    relevancy_method: str = "content",
+                    **kwargs):
     # Sample convo:
     # - triage error for nova.compute.manager
 
     logger.info("=" * 80)
 
+    logger.info(
+        f"System component: {system_component}, Relevancy method: {relevancy_method}"
+    )
+
     #TODO find the latest 'ERROR' log piece for the component `l1` and summarize it as `l1.summary`
     component_name = get_component_name(system_component)
     # Retrieve last ERROR of the component
     levels_str = ", ".join(["'" + level + "'" for level in important_levels])
-    suql_query = f"SELECT * FROM {TABLE_NAME} WHERE component = '{component_name}' AND level IN ({levels_str}) ORDER BY log_date, log_time DESC LIMIT 1;"
+    suql_query = f"SELECT * FROM {TABLE_NAME} WHERE component='{component_name}' AND level IN ({levels_str}) ORDER BY log_date, log_time DESC LIMIT 1;"
     logger.info("Latest `ERROR` log query as {}", suql_query)
 
     results, columns, _ = suql_execute(
@@ -190,47 +196,63 @@ def do_triage_error(system_component: str, **kwargs):
         table_w_ids,
         database,
     )
-    logger.info(results)
-    logger.info("+" * 80)
-    # TODO: handle no error case
+    if not len(results):
+        return {
+            "triage_error_result":
+            f"No error found in component {component_name}"
+        }
     assert len(results) == 1
 
+    latest_error_date = results[0][columns.index("log_date")]
+    latest_error_time = results[0][columns.index("log_time")]
     latest_error_log = results[0][columns.index("content")]
     latest_error_log_linearized = linearize_query_results(results, columns)
     logger.info("Latest `ERROR` log piece as {}", latest_error_log)
 
-    # TODO find the most relevant log pieces with the summary of the above log
-    # TODO linearize
-    if "summary_matching" in kwargs and kwargs["summary_matching"]:
+    if relevancy_method == "summarize":
         summary_query = f"SELECT summary('{latest_error_log}');"
-        # TODO find summary structure to find the actual summarized content
-        summary, _, _ = suql_execute(summary_query, table_w_ids, database)
-        summary = summary[0]
+        results, _, _ = suql_execute(summary_query, table_w_ids, database)
+        error_content = results[0][0]
+    elif relevancy_method == "linearize":
+        error_content = latest_error_log_linearized
+    elif relevancy_method == "linearize_summarize":
+        summary_query = f"SELECT summary('{latest_error_log_linearized}');"
+        results, _, _ = suql_execute(summary_query, table_w_ids, database)
+        error_content = results[0][0]
     else:
         # Default to using content directly
-        summary = latest_error_log
+        error_content = latest_error_log
 
-    logger.info("content summary as {}", summary)
+    logger.info("Error content as {}", error_content)
 
     if "use_is_relevant" in kwargs and kwargs["use_is_relevant"]:
-        relevant_query = f"is_relevant(content, '{summary}')"
+        relevant_query = f"is_relevant(content, '{error_content}')"
     else:
-        relevant_query = f"answer(content, 'Is it related to {summary}?') = 'YES'"
+        relevant_query = f"answer(content, 'Is it related to {error_content}?') = 'YES'"
 
     important_levels_str = ", ".join(
         ["'" + level + "'" for level in important_levels])
     unimportant_levels_str = ", ".join(
         ["'" + level + "'" for level in unimportant_levels])
-    # Retrieve import entries within relevance check
-    suql = f"SELECT * FROM {TABLE_NAME} WHERE level IN ({important_levels_str}) AND {relevant_query} ORDER BY log_date, log_time DESC LIMIT {LIMIT};"
+
+    datetime_filter = f"log_date <= '{latest_error_date}' AND log_time <= '{latest_error_time}'"
+
+    # Retrieve import entries BEFORE THE LASTEST ERROR with relevance check
+    suql = f"SELECT * FROM {TABLE_NAME} WHERE level IN ({important_levels_str}) AND {relevant_query} AND {datetime_filter} ORDER BY log_date, log_time DESC LIMIT {LIMIT};"
     results, columns, _ = suql_execute(suql, table_w_ids, database)
     # If the amount of logs with important levels are within limit, look at INFO
     if len(results) < LIMIT:
-        suql = f"SELECT * FROM {TABLE_NAME} WHERE level IN ({unimportant_levels_str}) AND {relevant_query} ORDER BY log_date, log_time DESC LIMIT {LIMIT - len(results)};"
+        suql = f"SELECT * FROM {TABLE_NAME} WHERE level IN ({unimportant_levels_str}) AND {relevant_query} AND {datetime_filter} ORDER BY log_date, log_time DESC LIMIT {LIMIT - len(results)};"
         normal_results, _, _ = suql_execute(suql, table_w_ids, database)
         results.extend(normal_results)
 
-    logger.info("10 most relevant log piece as {}", results)
+    if "log_time" in columns and "log_date" in columns:
+        results.sort(key=lambda x: (
+            x[columns.index("log_date")],
+            x[columns.index("log_time")],
+        ))
+
+    logger.info("Most relevant log pieces as {}", results)
     #TODO provide insights sorted by relevancy
     query_result_str = linearize_query_results(results, columns)
 
