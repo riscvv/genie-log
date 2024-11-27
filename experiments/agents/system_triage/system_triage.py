@@ -10,8 +10,12 @@ from worksheets.agent import Agent
 from worksheets.interface_utils import conversation_loop
 from worksheets.knowledge import SUQLKnowledgeBase, SUQLReActParser, SUQLParser
 
-TABLE_NAME = "log_records_small"
-TEMPLATE_NAME = "log_templates_small"
+# import litellm
+
+# litellm.set_verbose = True
+
+TABLE_NAME = "log_records"
+TEMPLATE_NAME = "log_templates"
 LIMIT = 20
 
 table_w_ids = {TABLE_NAME: "record_id"}
@@ -76,10 +80,10 @@ def do_system_status(
 
     # Retrieve relevant entries
     if "use_is_relevant" in kwargs and kwargs["use_is_relevant"]:
-        suql = "SELECT * FROM {table_name} WHERE component='{component}' OR is_relevant(content, 'What is the current status of {component}?') ORDER BY log_date, log_time DESC LIMIT {limit};".format(
+        suql = "SELECT * FROM {table_name} WHERE component='{component}' OR is_relevant(content, 'What is the current status of {component}?') ORDER BY log_date DESC, log_time DESC LIMIT {limit};".format(
             table_name=TABLE_NAME, component=component, limit=LIMIT)
     else:
-        suql = "SELECT * FROM {table_name} WHERE component='{component}' OR answer(content, 'Is it related to {component}?') = 'YES' ORDER BY log_date, log_time DESC LIMIT {limit};".format(
+        suql = "SELECT * FROM {table_name} WHERE component='{component}' OR answer(content, 'Is it related to {component}?') = 'YES' ORDER BY log_date DESC, log_time DESC LIMIT {limit};".format(
             table_name=TABLE_NAME, component=component, limit=LIMIT)
 
     logger.info(suql, table_w_ids, database)
@@ -127,7 +131,7 @@ def do_history_retrieval(
     logger.info("-" * 80)
 
     # Retrieve entries within time range
-    suql = "SELECT * FROM {table_name} WHERE component='{component}' AND level IN ({levels}) AND log_date BETWEEN '{date_start}' AND '{date_end}' AND log_time BETWEEN '{time_start}' AND '{time_end}' ORDER BY log_date, log_time DESC LIMIT {limit};".format(
+    suql = "SELECT * FROM {table_name} WHERE component='{component}' AND level IN ({levels}) AND log_date BETWEEN '{date_start}' AND '{date_end}' AND log_time BETWEEN '{time_start}' AND '{time_end}' ORDER BY log_date DESC, log_time DESC LIMIT {limit};".format(
         component=component,
         table_name=TABLE_NAME,
         levels=levels_str,
@@ -142,7 +146,7 @@ def do_history_retrieval(
     if len(results) < LIMIT:
         levels_str = ", ".join(
             ["'" + level + "'" for level in unimportant_levels])
-        suql = "SELECT * FROM {table_name} WHERE component='{component}' AND level IN ({levels}) AND log_date BETWEEN '{date_start}' AND '{date_end}' AND log_time BETWEEN '{time_start}' AND '{time_end}' ORDER BY log_date, log_time DESC LIMIT {limit};".format(
+        suql = "SELECT * FROM {table_name} WHERE component='{component}' AND level IN ({levels}) AND log_date BETWEEN '{date_start}' AND '{date_end}' AND log_time BETWEEN '{time_start}' AND '{time_end}' ORDER BY log_date DESC, log_time DESC LIMIT {limit};".format(
             component=component,
             table_name=TABLE_NAME,
             levels=levels_str,
@@ -176,7 +180,7 @@ def do_triage_error(system_component: str,
                     relevancy_method: str = "content",
                     **kwargs):
     # Sample convo:
-    # - triage error for nova.compute.manager
+    # - triage error for keystonemiddleware authorization token
 
     logger.info("=" * 80)
 
@@ -188,7 +192,7 @@ def do_triage_error(system_component: str,
     component_name = get_component_name(system_component)
     # Retrieve last ERROR of the component
     levels_str = ", ".join(["'" + level + "'" for level in important_levels])
-    suql_query = f"SELECT * FROM {TABLE_NAME} WHERE component='{component_name}' AND level IN ({levels_str}) ORDER BY log_date, log_time DESC LIMIT 1;"
+    suql_query = f"SELECT * FROM {TABLE_NAME} WHERE component='{component_name}' AND level IN ({levels_str}) ORDER BY log_date DESC, log_time DESC LIMIT 1;"
     logger.info("Latest `ERROR` log query as {}", suql_query)
 
     results, columns, _ = suql_execute(
@@ -230,19 +234,21 @@ def do_triage_error(system_component: str,
     else:
         relevant_query = f"answer(content, 'Is it related to {error_content}?') = 'YES'"
 
+    # relevant_query = "False"
+
     important_levels_str = ", ".join(
         ["'" + level + "'" for level in important_levels])
     unimportant_levels_str = ", ".join(
         ["'" + level + "'" for level in unimportant_levels])
 
-    datetime_filter = f"log_date <= '{latest_error_date}' AND log_time <= '{latest_error_time}'"
+    datetime_filter = f"(log_date < '{latest_error_date}' OR (log_date = '{latest_error_date}' AND log_time <= '{latest_error_time}'))"
 
     # Retrieve import entries BEFORE THE LASTEST ERROR with relevance check
-    suql = f"SELECT * FROM {TABLE_NAME} WHERE level IN ({important_levels_str}) AND {relevant_query} AND {datetime_filter} ORDER BY log_date, log_time DESC LIMIT {LIMIT};"
+    suql = f"SELECT * FROM {TABLE_NAME} WHERE (component='{component_name}' OR {relevant_query}) AND level IN ({important_levels_str}) AND {datetime_filter} ORDER BY log_date DESC, log_time DESC LIMIT {LIMIT};"
     results, columns, _ = suql_execute(suql, table_w_ids, database)
     # If the amount of logs with important levels are within limit, look at INFO
     if len(results) < LIMIT:
-        suql = f"SELECT * FROM {TABLE_NAME} WHERE level IN ({unimportant_levels_str}) AND {relevant_query} AND {datetime_filter} ORDER BY log_date, log_time DESC LIMIT {LIMIT - len(results)};"
+        suql = f"SELECT * FROM {TABLE_NAME} WHERE (component='{component_name}' OR {relevant_query}) AND level IN ({unimportant_levels_str}) AND {datetime_filter} ORDER BY log_date DESC, log_time DESC LIMIT {LIMIT - len(results)};"
         normal_results, _, _ = suql_execute(suql, table_w_ids, database)
         results.extend(normal_results)
 
@@ -253,6 +259,9 @@ def do_triage_error(system_component: str,
         ))
 
     logger.info("Most relevant log pieces as {}", results)
+    for r in results:
+        print(r)
+
     #TODO provide insights sorted by relevancy
     query_result_str = linearize_query_results(results, columns)
 
