@@ -48,7 +48,9 @@ Refer to [systemChatBot repo README.md](https://github.com/riscvv/System-Triage-
 
 ## Running the Code
 
-To run Logenius, execute the following command in the project directory:
+1. Prerequisite: Run SUQL-turbo in the directory. Please refer to [suql-turbo repo README.md](https://github.com/xiaofuhu/suql-turbo)
+
+2. To run Logenius, execute the following command in the project directory:
 ```bash
 cd experiments/agents/system_triage
 python logenius.py
